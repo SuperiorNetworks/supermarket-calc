@@ -25,4 +25,29 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Sales data table for tracking daily supermarket performance.
+ * Each row represents one day's sales data.
+ */
+export const salesData = mysqlTable("sales_data", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Date of the sales record (stored as YYYY-MM-DD string) */
+  date: varchar("date", { length: 10 }).notNull(),
+  /** Total revenue for the day */
+  totalSales: int("total_sales").notNull().default(0),
+  /** Cost of goods sold */
+  cogs: int("cogs").notNull().default(0),
+  /** Other expenses (wages, utilities, rent, etc.) */
+  expensesOther: int("expenses_other").notNull().default(0),
+  /** Refunds or discounts (negative adjustments) */
+  refundsOrDiscounts: int("refunds_or_discounts").notNull().default(0),
+  /** Number of customers */
+  customerCount: int("customer_count").notNull().default(0),
+  /** Free text notes */
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SalesData = typeof salesData.$inferSelect;
+export type InsertSalesData = typeof salesData.$inferInsert;

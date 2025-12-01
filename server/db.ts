@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertSalesData, InsertUser, salesData, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,51 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * Sales Data Operations
+ */
+
+export async function getAllSalesData() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(salesData).orderBy(desc(salesData.date));
+}
+
+export async function getSalesDataByDate(date: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(salesData).where(eq(salesData.date, date)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function upsertSalesData(data: InsertSalesData) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await getSalesDataByDate(data.date);
+  
+  if (existing) {
+    // Update existing record
+    await db.update(salesData)
+      .set({
+        totalSales: data.totalSales,
+        cogs: data.cogs,
+        expensesOther: data.expensesOther,
+        refundsOrDiscounts: data.refundsOrDiscounts,
+        customerCount: data.customerCount,
+        notes: data.notes,
+      })
+      .where(eq(salesData.date, data.date));
+    return await getSalesDataByDate(data.date);
+  } else {
+    // Insert new record
+    await db.insert(salesData).values(data);
+    return await getSalesDataByDate(data.date);
+  }
+}
+
+export async function deleteSalesData(date: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(salesData).where(eq(salesData.date, date));
+}

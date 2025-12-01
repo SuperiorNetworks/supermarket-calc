@@ -2,6 +2,8 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { z } from "zod";
+import { deleteSalesData, getAllSalesData, upsertSalesData } from "./db";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -17,12 +19,32 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  sales: router({
+    list: publicProcedure.query(async () => {
+      return await getAllSalesData();
+    }),
+    upsert: publicProcedure
+      .input(
+        z.object({
+          date: z.string(),
+          totalSales: z.number(),
+          cogs: z.number(),
+          expensesOther: z.number(),
+          refundsOrDiscounts: z.number(),
+          customerCount: z.number(),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await upsertSalesData(input);
+      }),
+    delete: publicProcedure
+      .input(z.object({ date: z.string() }))
+      .mutation(async ({ input }) => {
+        await deleteSalesData(input.date);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
