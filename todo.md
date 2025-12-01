@@ -14,3 +14,6 @@
 - [x] Date range filters (Today, Last 7 Days, This Month, All Time)
 - [x] Responsive design for all devices
 - [x] GitHub repository creation and publishing
+
+## Documentation Updates
+- [x] Enhanced README with usefulness and design explanations
